@@ -1,0 +1,39 @@
+version: '3'
+
+# Define services
+services:
+
+  # App Service
+  app:
+    # Configuration for building the docker image for the service
+    build:
+      context: . # Use an image built from the specified dockerfile in the current directory.
+      dockerfile: Dockerfile
+    command: sleep 365d
+    volumes:
+      - .:/code
+    ports:
+      - "8080:8080" # Forward the exposed port 8080 on the container to port 8080 on the host machine
+    restart: unless-stopped
+    depends_on: 
+      - db # This service depends on mongo db. Start that first.
+    environment: # Pass environment variables to the service
+      - MONGO_HOST=db
+      - MONGO_PORT=27017  
+    networks: # Networks to join (Services on the same network can communicate with each other using their name)
+      - backend
+
+  # Mongo Db Service   
+  db:
+    image: mongo:3.0.2
+    deploy:
+      restart_policy:
+        condition: always
+    ports:
+        - "27017:27017"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: 'bridge'
